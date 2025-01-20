@@ -1,0 +1,13 @@
+.graphiql {
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+.graphiql .query,
+.graphiql .response {
+    display: none;
+}
+
+.graphiql.view-only .execute-button {
+    display: none !important;
+}

@@ -1,0 +1,4 @@
+build
+dist
+sphinx_graphiql.egg-info
+.idea/*
