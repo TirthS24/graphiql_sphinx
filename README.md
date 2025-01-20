@@ -30,8 +30,14 @@ GraphiQL powered GraphQL playground renderer for Sphinx.
 4. Run the following command in docs directory: `make html`
 
 ## Images
-![Endpoint and Authentication sections](./utils/view.png)
+![Sample Query and its Result](./utils/request.png)
+*Sample Query*
+
+![Queries Doc and IDE](./utils/view.png)
 *IDE with Docs*
 
-![Sample POST Request](./utils/request.png)
-*Sample Query*
+## Requirements
+Installs following libraries:
+- fett
+- graphql-core
+- sphinx

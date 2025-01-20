@@ -10,7 +10,8 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         'sphinx',
-        'fett'
+        'fett',
+        'graphql-core'
     ],
     package_data={
         'sphinxcontrib_graphiql': ['static/*'],
