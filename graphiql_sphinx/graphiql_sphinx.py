@@ -14,10 +14,18 @@ class SphinxGraphiQL(Directive):
     GRAPHIQL_TEMPLATE: str = '''
 .. raw:: html
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/graphiql/2.0.9/graphiql.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/2.0.9/graphiql.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/graphiql/3.8.0/graphiql.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.0.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.0.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/3.8.0/graphiql.min.js"></script>
+    <script
+      src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js"
+      crossorigin
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
+    />
 
     <div id="graphiql" style="height: 80vh; width:120vh; padding-left: 1vh"></div>
 
@@ -33,9 +41,12 @@ class SphinxGraphiQL(Directive):
                 body: JSON.stringify(graphQLParams),
             }).then(response => response.json());
         };
+        const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
         ReactDOM.render(
         React.createElement(GraphiQL, { 
             fetcher: graphQLFetcher,
+            defaultEditorToolsVisibility: true,
+            plugins: [explorerPlugin],
         }),
         document.getElementById('graphiql')
         );
