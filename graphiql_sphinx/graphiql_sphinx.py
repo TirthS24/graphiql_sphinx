@@ -21,7 +21,7 @@ class SphinxGraphiQL(Directive):
     <script src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js" crossorigin></script>
     <link rel="stylesheet" href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css" />
 
-    <div id="graphiql" style="height: 80vh; width:120vh; padding-left: 1vh"></div>
+    <div id="graphiql" style="height: 80vh; width:45vw; padding-left: 1vh ; margin-top:40px"></div>
 
     <script>
         const graphQLFetcher = async (graphQLParams, options = {}) => {
