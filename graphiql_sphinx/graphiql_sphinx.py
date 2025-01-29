@@ -21,47 +21,93 @@ class SphinxGraphiQL(Directive):
     <script src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js" crossorigin></script>
     <link rel="stylesheet" href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css" />
 
-    <div id="graphiql" style="height: 80vh; width:45vw; padding-left: 1vh ; margin-top:40px"></div>
+    <div id="graphiql" style="height: 80vh; width:45vw; padding-left: 1vh; margin-top:40px"></div>
 
     <script>
-        const graphQLFetcher = async (graphQLParams, options = {}) => {
-            let headers = {};
-            
-            if (typeof options.headers === 'string') {
-                try {
-                    headers = JSON.parse(options.headers);
-                } catch (e) {
-                    console.log('Error parsing headers:', e);
+        // Function to get the authentication token from the auth template
+        async function getAuthToken() {
+            try {
+                // This assumes your auth.html template sets up a function called getAuthenticationToken
+                // that returns a Promise resolving to the token
+                if (typeof window.getAuthenticationToken === 'function') {
+                    const token = await window.getAuthenticationToken();
+                    return token;
                 }
-            } else if (options.headers) {
-                headers = options.headers;
+                return null;
+            } catch (error) {
+                console.error('Error getting authentication token:', error);
+                return null;
             }
+        }
+
+        // Create a fetcher that automatically handles authentication
+        const graphQLFetcher = async (graphQLParams, options = {}) => {
+            // Get authentication token
+            const authToken = await getAuthToken();
             
-            console.log("Headers being sent:", headers);
-            
-            return fetch('{{ endpoint }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...headers
-                },
-                body: JSON.stringify(graphQLParams),
-            }).then(response => response.json());
+            let headers = {
+                'Content-Type': 'application/json',
+            };
+
+            // Add authentication header if token is available
+            if (authToken) {
+                headers['Authorization'] = authToken;
+            }
+
+            // Merge with any user-provided headers
+            if (options.headers) {
+                try {
+                    const userHeaders = typeof options.headers === 'string' 
+                        ? JSON.parse(options.headers)
+                        : options.headers;
+                    headers = { ...headers, ...userHeaders };
+                } catch (e) {
+                    console.error('Error parsing headers:', e);
+                }
+            }
+
+            try {
+                const response = await fetch('{{ endpoint }}', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(graphQLParams),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('GraphQL request error:', error);
+                throw error;
+            }
         };
 
+        // Set up GraphiQL with the explorer plugin
         const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
-        
-        ReactDOM.render(
-            React.createElement(GraphiQL, {
-                fetcher: graphQLFetcher,
-                defaultEditorToolsVisibility: true,
-                plugins: [explorerPlugin],
-                defaultHeaders: JSON.stringify({
-                    'Authorization': 'Bearer your-token-here'
-                }, null, 2)
-            }),
-            document.getElementById('graphiql')
-        );
+
+        // Function to initialize GraphiQL
+        async function initializeGraphiQL() {
+            const authToken = await getAuthToken();
+            const defaultHeaders = authToken ? 
+                JSON.stringify({ 'Authorization': authToken }, null, 2) : 
+                '{}';
+
+            ReactDOM.render(
+                React.createElement(GraphiQL, {
+                    fetcher: graphQLFetcher,
+                    defaultEditorToolsVisibility: true,
+                    plugins: [explorerPlugin],
+                    defaultHeaders: defaultHeaders,
+                    shouldPersistHeaders: true
+                }),
+                document.getElementById('graphiql')
+            );
+        }
+
+        // Initialize GraphiQL once the page loads
+        window.addEventListener('load', initializeGraphiQL);
     </script>
     '''
 
