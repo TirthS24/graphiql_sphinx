@@ -43,7 +43,9 @@ class SphinxGraphiQL(Directive):
         // Create a fetcher that automatically handles authentication
         const graphQLFetcher = async (graphQLParams, options = {}) => {
             // Get authentication token
-            const authToken = await getAuthToken();
+            const authObj = await getAuthToken();
+            const authToken = authObj ? authObj.token : null;
+            const authType = authObj ? authObj.token_type : null;
             
             let headers = {
                 'Content-Type': 'application/json',
@@ -51,7 +53,10 @@ class SphinxGraphiQL(Directive):
 
             // Add authentication header if token is available
             if (authToken) {
-                headers['Authorization'] = authToken;
+                if (authType == 'COGNITO_JWT') 
+                    headers['Authorization'] = authToken;
+                else if (authType == 'API_KEY')
+                    headers['x-api-key'] = authToken;
             }
 
             // Merge with any user-provided headers
