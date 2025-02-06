@@ -21,7 +21,7 @@ class SphinxGraphiQL(Directive):
     <script src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js" crossorigin></script>
     <link rel="stylesheet" href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css" />
 
-    <div id="graphiql" style="height: 80vh; width:60vw; padding-left: 1vh; margin-top:40px"></div>
+    <div id="graphiql" style="padding-left: 1vh; margin-top:40px"></div>
 
     <script>
         // Function to get the authentication token from the auth template
