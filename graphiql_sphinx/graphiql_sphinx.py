@@ -94,7 +94,9 @@ class SphinxGraphiQL(Directive):
 
         // Function to initialize GraphiQL
         async function initializeGraphiQL() {
-            const authToken = await getAuthToken();
+            const authObj = await getAuthToken();
+            const authToken = authObj ? authObj.token : null;
+            const authType = authObj ? authObj.token_type : null;
             const defaultHeaders = authToken ? 
                 JSON.stringify({ 'Authorization': authToken }, null, 2) : 
                 '{}';
