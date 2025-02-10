@@ -217,7 +217,7 @@ class SphinxGraphiQL(Directive):
                                 <br/>
                                 <p>Please click the Re-fetch button to Execute Queries.</p>
                             </div>
-                            <button onClick={handleLogout} style={{marginTop: '15px'}}>
+                            <button onClick={handleLogout}>
                                 Logout
                             </button>
                         </div>
