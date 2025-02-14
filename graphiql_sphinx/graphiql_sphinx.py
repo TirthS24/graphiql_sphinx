@@ -26,31 +26,48 @@ class SphinxGraphiQL(Directive):
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
     <style>
-        /* Override Sphinx theme styles for better integration */
-        .sphinx-graphiql-wrapper {
-            margin: 0 -2rem; /* Negative margin to break out of content constraints */
-            max-width: none;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        /* Reset styles for GraphiQL container */
+        .graphiql-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 600px !important;
         }
-        .sphinx-graphiql-wrapper .container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
+        
+        /* Reset styles for form container */
+        .container {
+            width: 100% !important;
+            max-width: none !important;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .sphinx-graphiql-wrapper .form-group {
+        
+        /* Override any max-width constraints from the theme */
+        #root, #graphiql {
+            max-width: none !important;
+            width: 100% !important;
+        }
+        
+        /* Add specific fixes for the SphinxAwesome theme */
+        .sphinx-container .main-content .body .section > .container,
+        .sphinx-container .main-content .body .section > #root,
+        .sphinx-container .main-content .body .section > #graphiql {
+            max-width: none !important;
+            width: 100% !important;
+            padding: 0;
+        }
+        
+        /* Form styling */
+        .form-group {
             margin-bottom: 15px;
         }
-        .sphinx-graphiql-wrapper label {
+        label {
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
         }
-        .sphinx-graphiql-wrapper select, 
-        .sphinx-graphiql-wrapper input {
+        select, input {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -58,7 +75,7 @@ class SphinxGraphiQL(Directive):
             box-sizing: border-box;
             color: #000;
         }
-        .sphinx-graphiql-wrapper button {
+        button {
             background-color: #2980b9;
             color: white;
             padding: 10px 15px;
@@ -68,43 +85,45 @@ class SphinxGraphiQL(Directive):
             width: 100%;
             margin-top: 10px;
         }
-        .sphinx-graphiql-wrapper button:hover {
+        button:hover {
             background-color: #3498db;
         }
-        .sphinx-graphiql-wrapper .error {
+        .error {
             color: #c62828;
             padding: 10px;
             border-radius: 4px;
             margin: 10px 0;
         }
-        .sphinx-graphiql-wrapper .response {
+        .response {
             padding: 15px;
             border-radius: 4px;
             margin-top: 20px;
         }
-        .sphinx-graphiql-wrapper #graphiql {
-            width: 100%;
-            height: 600px;
-            margin-top: 20px;
-            transition: opacity 0.3s ease;
-        }
-        .sphinx-graphiql-wrapper .hidden {
+        .hidden {
             display: none !important;
         }
         
-        /* Fix for integration with Sphinx themes */
-        .sphinx-graphiql-wrapper h1, 
-        .sphinx-graphiql-wrapper h2, 
-        .sphinx-graphiql-wrapper h3 {
-            margin-top: 1em;
-            margin-bottom: 0.5em;
+        /* Ensure GraphiQL is visible at full width */
+        #graphiql {
+            position: relative;
+            width: 100% !important;
+            height: 600px !important;
+            margin-top: 20px;
+            overflow: hidden;
         }
         
-        /* Make GraphiQL responsive */
-        @media (max-width: 1200px) {
-            .sphinx-graphiql-wrapper {
-                margin: 0 -1rem;
-            }
+        /* Fix for the GraphiQL Explorer plugin */
+        .graphiql-explorer-root {
+            width: auto !important;
+        }
+        
+        /* Ensure full width for the container */
+        .graphiql-container,
+        .graphiql-container .editorWrap,
+        .graphiql-container .queryWrap,
+        .graphiql-container .resultWrap {
+            flex: 1 1 auto !important;
+            width: 100% !important;
         }
     </style>
     
