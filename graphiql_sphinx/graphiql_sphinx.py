@@ -77,11 +77,9 @@ class SphinxGraphiQL(Directive):
             padding: 10px;
             border-radius: 4px;
             margin: 10px 0;
-            background-color: #ffebee;
         }
         .response {
             padding: 15px;
-            background-color: #e8f5e9;
             border-radius: 4px;
             margin-top: 20px;
         }
@@ -90,11 +88,15 @@ class SphinxGraphiQL(Directive):
             max-width: 1200px;
             height: 600px;
             margin-top: 20px;
+            transition: opacity 0.3s ease;
+        }
+        .hidden {
+            display: none !important;
         }
     </style>
     <body>
         <div id="root"></div>
-        <div id="graphiql"></div>
+        <div id="graphiql" class="hidden"></div>
 
         <script type="text/babel">
             // Global variables to store authentication details
@@ -106,11 +108,23 @@ class SphinxGraphiQL(Directive):
                 const [formData, setFormData] = React.useState({});
                 const [response, setResponse] = React.useState(null);
                 const [error, setError] = React.useState(null);
+                const [isGraphiQLInitialized, setIsGraphiQLInitialized] = React.useState(false);
 
-                const authFields = {
-                    COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
-                    API_KEY: ['api_key']
-                };
+                React.useEffect(() => {
+                    const graphiqlElement = document.getElementById('graphiql');
+                    if (response && !isGraphiQLInitialized) {
+                        graphiqlElement.classList.remove('hidden');
+                        initializeGraphiQL();
+                        setIsGraphiQLInitialized(true);
+                    } else if (!response) {
+                        graphiqlElement.classList.add('hidden');
+                        // Clean up GraphiQL when logging out
+                        if (isGraphiQLInitialized) {
+                            ReactDOM.unmountComponentAtNode(document.getElementById('graphiql'));
+                            setIsGraphiQLInitialized(false);
+                        }
+                    }
+                }, [response, isGraphiQLInitialized]);
 
                 const handleInputChange = (e) => {
                     setFormData({
@@ -144,26 +158,28 @@ class SphinxGraphiQL(Directive):
                             throw new Error(data.detail || 'Failed to get token');
                         }
 
-                        // Set global variables for token and type
                         GLOBAL_AUTH_TOKEN = data.authorization_header;
                         GLOBAL_TOKEN_TYPE = data.token_type;
 
                         setResponse(data);
-                        initializeGraphiQL();
                     } catch (err) {
                         setError(err.message);
-                        // Reset global variables on error
                         GLOBAL_AUTH_TOKEN = null;
                         GLOBAL_TOKEN_TYPE = null;
                     }
                 };
 
                 const handleLogout = () => {
-                    // Reset global variables
                     GLOBAL_AUTH_TOKEN = null;
                     GLOBAL_TOKEN_TYPE = null;
                     setResponse(null);
                     setFormData({});
+                    setError(null);
+                };
+
+                const authFields = {
+                    COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
+                    API_KEY: ['api_key']
                 };
 
                 return (
@@ -226,7 +242,6 @@ class SphinxGraphiQL(Directive):
                     'Content-Type': 'application/json',
                 };
 
-                // Use global variables for authentication
                 if (GLOBAL_AUTH_TOKEN) {
                     if (GLOBAL_TOKEN_TYPE === 'COGNITO_JWT') 
                         headers['Authorization'] = GLOBAL_AUTH_TOKEN;
