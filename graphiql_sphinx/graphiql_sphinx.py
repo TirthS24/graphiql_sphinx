@@ -28,8 +28,6 @@ class SphinxGraphiQL(Directive):
     <style>
         /* Reset styles for GraphiQL container */
         .graphiql-container {
-            width: 100% !important;
-            max-width: 100% !important;
             height: 600px !important;
         }
         
@@ -37,7 +35,7 @@ class SphinxGraphiQL(Directive):
         .container {
             width: 100% !important;
             max-width: none !important;
-            padding: 20px;
+            padding: 0px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
@@ -46,7 +44,6 @@ class SphinxGraphiQL(Directive):
         /* Override any max-width constraints from the theme */
         #root, #graphiql {
             max-width: none !important;
-            width: 100% !important;
         }
         
         /* Add specific fixes for the SphinxAwesome theme */
@@ -106,7 +103,7 @@ class SphinxGraphiQL(Directive):
         /* Ensure GraphiQL is visible at full width */
         #graphiql {
             position: relative;
-            width: 100% !important;
+            width: 75vw !important;
             height: 600px !important;
             margin-top: 20px;
             overflow: hidden;
@@ -128,7 +125,6 @@ class SphinxGraphiQL(Directive):
     </style>
     
     <div class="sphinx-graphiql-wrapper">
-        <h1>GraphQL API Explorer</h1>
         <div id="root"></div>
         <div id="graphiql" class="hidden"></div>
     </div>
