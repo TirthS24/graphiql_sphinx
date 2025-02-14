@@ -26,32 +26,31 @@ class SphinxGraphiQL(Directive):
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
     <style>
-        body {
+        /* Override Sphinx theme styles for better integration */
+        .sphinx-graphiql-wrapper {
+            margin: 0 -2rem; /* Negative margin to break out of content constraints */
+            max-width: none;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
-        .container {
+        .sphinx-graphiql-wrapper .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .form-group {
+        .sphinx-graphiql-wrapper .form-group {
             margin-bottom: 15px;
         }
-        label {
+        .sphinx-graphiql-wrapper label {
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
         }
-        select, input {
+        .sphinx-graphiql-wrapper select, 
+        .sphinx-graphiql-wrapper input {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -59,7 +58,7 @@ class SphinxGraphiQL(Directive):
             box-sizing: border-box;
             color: #000;
         }
-        button {
+        .sphinx-graphiql-wrapper button {
             background-color: #2980b9;
             color: white;
             padding: 10px 15px;
@@ -69,238 +68,254 @@ class SphinxGraphiQL(Directive):
             width: 100%;
             margin-top: 10px;
         }
-        button:hover {
+        .sphinx-graphiql-wrapper button:hover {
             background-color: #3498db;
         }
-        .error {
+        .sphinx-graphiql-wrapper .error {
             color: #c62828;
             padding: 10px;
             border-radius: 4px;
             margin: 10px 0;
         }
-        .response {
+        .sphinx-graphiql-wrapper .response {
             padding: 15px;
             border-radius: 4px;
             margin-top: 20px;
         }
-        #graphiql {
+        .sphinx-graphiql-wrapper #graphiql {
             width: 100%;
-            max-width: 1200px;
             height: 600px;
             margin-top: 20px;
             transition: opacity 0.3s ease;
         }
-        .hidden {
+        .sphinx-graphiql-wrapper .hidden {
             display: none !important;
         }
+        
+        /* Fix for integration with Sphinx themes */
+        .sphinx-graphiql-wrapper h1, 
+        .sphinx-graphiql-wrapper h2, 
+        .sphinx-graphiql-wrapper h3 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+        
+        /* Make GraphiQL responsive */
+        @media (max-width: 1200px) {
+            .sphinx-graphiql-wrapper {
+                margin: 0 -1rem;
+            }
+        }
     </style>
-    <body>
+    
+    <div class="sphinx-graphiql-wrapper">
+        <h1>GraphQL API Explorer</h1>
         <div id="root"></div>
         <div id="graphiql" class="hidden"></div>
+    </div>
 
-        <script type="text/babel">
-            // Global variables to store authentication details
-            let GLOBAL_AUTH_TOKEN = null;
-            let GLOBAL_TOKEN_TYPE = null;
+    <script type="text/babel">
+        // Global variables to store authentication details
+        let GLOBAL_AUTH_TOKEN = null;
+        let GLOBAL_TOKEN_TYPE = null;
 
-            const AuthTokenForm = () => {
-                const [authType, setAuthType] = React.useState('COGNITO');
-                const [formData, setFormData] = React.useState({});
-                const [response, setResponse] = React.useState(null);
-                const [error, setError] = React.useState(null);
-                const [isGraphiQLInitialized, setIsGraphiQLInitialized] = React.useState(false);
+        const AuthTokenForm = () => {
+            const [authType, setAuthType] = React.useState('COGNITO');
+            const [formData, setFormData] = React.useState({});
+            const [response, setResponse] = React.useState(null);
+            const [error, setError] = React.useState(null);
+            const [isGraphiQLInitialized, setIsGraphiQLInitialized] = React.useState(false);
 
-                React.useEffect(() => {
-                    const graphiqlElement = document.getElementById('graphiql');
-                    if (response && !isGraphiQLInitialized) {
-                        graphiqlElement.classList.remove('hidden');
-                        initializeGraphiQL();
-                        setIsGraphiQLInitialized(true);
-                    } else if (!response) {
-                        graphiqlElement.classList.add('hidden');
-                        // Clean up GraphiQL when logging out
-                        if (isGraphiQLInitialized) {
-                            ReactDOM.unmountComponentAtNode(document.getElementById('graphiql'));
-                            setIsGraphiQLInitialized(false);
-                        }
+            React.useEffect(() => {
+                const graphiqlElement = document.getElementById('graphiql');
+                if (response && !isGraphiQLInitialized) {
+                    graphiqlElement.classList.remove('hidden');
+                    initializeGraphiQL();
+                    setIsGraphiQLInitialized(true);
+                } else if (!response) {
+                    graphiqlElement.classList.add('hidden');
+                    // Clean up GraphiQL when logging out
+                    if (isGraphiQLInitialized) {
+                        ReactDOM.unmountComponentAtNode(document.getElementById('graphiql'));
+                        setIsGraphiQLInitialized(false);
                     }
-                }, [response, isGraphiQLInitialized]);
+                }
+            }, [response, isGraphiQLInitialized]);
 
-                const handleInputChange = (e) => {
-                    setFormData({
-                        ...formData,
-                        [e.target.name]: e.target.value
-                    });
-                };
-
-                const handleSubmit = async (e) => {
-                    e.preventDefault();
-                    setError(null);
-                    setResponse(null);
-
-                    try {
-                        const payload = {
-                            auth_type: authType,
-                            ...formData
-                        };
-
-                        const response = await fetch('{{auth_endpoint}}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(payload),
-                        });
-
-                        const data = await response.json();
-                        
-                        if (!response.ok) {
-                            throw new Error(data.detail || 'Failed to get token');
-                        }
-
-                        GLOBAL_AUTH_TOKEN = data.authorization_header;
-                        GLOBAL_TOKEN_TYPE = data.token_type;
-
-                        setResponse(data);
-                    } catch (err) {
-                        setError(err.message);
-                        GLOBAL_AUTH_TOKEN = null;
-                        GLOBAL_TOKEN_TYPE = null;
-                    }
-                };
-
-                const handleLogout = () => {
-                    GLOBAL_AUTH_TOKEN = null;
-                    GLOBAL_TOKEN_TYPE = null;
-                    setResponse(null);
-                    setFormData({});
-                    setError(null);
-                };
-
-                const authFields = {
-                    COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
-                    API_KEY: ['api_key']
-                };
-
-                return (
-                    React.createElement('div', { className: 'container' },
-                        React.createElement('h1', null, 'Get Authorization Token'),
-                        !response ? (
-                            React.createElement('form', { onSubmit: handleSubmit },
-                                React.createElement('div', { className: 'form-group' },
-                                    React.createElement('label', null, 'Authentication Type'),
-                                    React.createElement('select', {
-                                        value: authType,
-                                        onChange: (e) => {
-                                            setAuthType(e.target.value);
-                                            setFormData({});
-                                        }
-                                    },
-                                        Object.keys(authFields).map(type => 
-                                            React.createElement('option', { key: type, value: type }, type)
-                                        )
-                                    )
-                                ),
-                                authFields[authType].map(field => 
-                                    React.createElement('div', { key: field, className: 'form-group' },
-                                        React.createElement('label', null, 
-                                            field.split('_').map(word => 
-                                                word.charAt(0).toUpperCase() + word.slice(1)
-                                            ).join(' ')
-                                        ),
-                                        React.createElement('input', {
-                                            type: field.includes('password') ? 'password' : 'text',
-                                            name: field,
-                                            value: formData[field] || '',
-                                            onChange: handleInputChange,
-                                            required: true
-                                        })
-                                    )
-                                ),
-                                React.createElement('button', { type: 'submit' }, 'Login')
-                            )
-                        ) : (
-                            React.createElement('div', null,
-                                React.createElement('div', { className: 'response' },
-                                    React.createElement('h3', null, 'Authentication Status: Active'),
-                                    React.createElement('p', null, 'You can now use the GraphiQL explorer below.'),
-                                    React.createElement('br', null),
-                                    React.createElement('p', null, 'Please click the Re-fetch button to Execute Queries.')
-                                ),
-                                React.createElement('button', { onClick: handleLogout }, 'Logout')
-                            )
-                        ),
-                        error && (
-                            React.createElement('div', { className: 'error' }, error)
-                        )
-                    )
-                );
+            const handleInputChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value
+                });
             };
 
-            const graphQLFetcher = async (graphQLParams, options = {}) => {
-                let headers = {
-                    'Content-Type': 'application/json',
-                };
-
-                if (GLOBAL_AUTH_TOKEN) {
-                    if (GLOBAL_TOKEN_TYPE === 'COGNITO_JWT') 
-                        headers['Authorization'] = GLOBAL_AUTH_TOKEN;
-                    else if (GLOBAL_TOKEN_TYPE === 'API_KEY')
-                        headers['x-api-key'] = GLOBAL_AUTH_TOKEN;
-                }
-
-                if (options.headers) {
-                    try {
-                        const userHeaders = typeof options.headers === 'string' 
-                            ? JSON.parse(options.headers)
-                            : options.headers;
-                        headers = { ...headers, ...userHeaders };
-                    } catch (e) {
-                        console.error('Error parsing headers:', e);
-                    }
-                }
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError(null);
+                setResponse(null);
 
                 try {
-                    const response = await fetch('{{graphql_endpoint}}', {
+                    const payload = {
+                        auth_type: authType,
+                        ...formData
+                    };
+
+                    const response = await fetch('{{auth_endpoint}}', {
                         method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(graphQLParams),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
                     });
 
+                    const data = await response.json();
+                    
                     if (!response.ok) {
-                        throw new Error('HTTP error! status: ' + response.status);
+                        throw new Error(data.detail || 'Failed to get token');
                     }
 
-                    return await response.json();
-                } catch (error) {
-                    console.error('GraphQL request error:', error);
-                    throw error;
+                    GLOBAL_AUTH_TOKEN = data.authorization_header;
+                    GLOBAL_TOKEN_TYPE = data.token_type;
+
+                    setResponse(data);
+                } catch (err) {
+                    setError(err.message);
+                    GLOBAL_AUTH_TOKEN = null;
+                    GLOBAL_TOKEN_TYPE = null;
                 }
             };
 
-            const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
+            const handleLogout = () => {
+                GLOBAL_AUTH_TOKEN = null;
+                GLOBAL_TOKEN_TYPE = null;
+                setResponse(null);
+                setFormData({});
+                setError(null);
+            };
 
-            function initializeGraphiQL() {
-                const defaultHeaders = GLOBAL_AUTH_TOKEN ? 
-                    JSON.stringify({ 'Authorization': GLOBAL_AUTH_TOKEN }, null, 2) : 
-                    '{}';
+            const authFields = {
+                COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
+                API_KEY: ['api_key']
+            };
 
-                ReactDOM.render(
-                    React.createElement(GraphiQL, {
-                        fetcher: graphQLFetcher,
-                        defaultEditorToolsVisibility: true,
-                        plugins: [explorerPlugin],
-                        defaultHeaders: defaultHeaders,
-                        shouldPersistHeaders: true
-                    }),
-                    document.getElementById('graphiql')
-                );
+            return (
+                React.createElement('div', { className: 'container' },
+                    React.createElement('h2', null, 'Get Authorization Token'),
+                    !response ? (
+                        React.createElement('form', { onSubmit: handleSubmit },
+                            React.createElement('div', { className: 'form-group' },
+                                React.createElement('label', null, 'Authentication Type'),
+                                React.createElement('select', {
+                                    value: authType,
+                                    onChange: (e) => {
+                                        setAuthType(e.target.value);
+                                        setFormData({});
+                                    }
+                                },
+                                    Object.keys(authFields).map(type => 
+                                        React.createElement('option', { key: type, value: type }, type)
+                                    )
+                                )
+                            ),
+                            authFields[authType].map(field => 
+                                React.createElement('div', { key: field, className: 'form-group' },
+                                    React.createElement('label', null, 
+                                        field.split('_').map(word => 
+                                            word.charAt(0).toUpperCase() + word.slice(1)
+                                        ).join(' ')
+                                    ),
+                                    React.createElement('input', {
+                                        type: field.includes('password') ? 'password' : 'text',
+                                        name: field,
+                                        value: formData[field] || '',
+                                        onChange: handleInputChange,
+                                        required: true
+                                    })
+                                )
+                            ),
+                            React.createElement('button', { type: 'submit' }, 'Login')
+                        )
+                    ) : (
+                        React.createElement('div', null,
+                            React.createElement('div', { className: 'response' },
+                                React.createElement('h3', null, 'Authentication Status: Active'),
+                                React.createElement('p', null, 'You can now use the GraphiQL explorer below.'),
+                                React.createElement('br', null),
+                                React.createElement('p', null, 'Please click the Re-fetch button to Execute Queries.')
+                            ),
+                            React.createElement('button', { onClick: handleLogout }, 'Logout')
+                        )
+                    ),
+                    error && (
+                        React.createElement('div', { className: 'error' }, error)
+                    )
+                )
+            );
+        };
+
+        const graphQLFetcher = async (graphQLParams, options = {}) => {
+            let headers = {
+                'Content-Type': 'application/json',
+            };
+
+            if (GLOBAL_AUTH_TOKEN) {
+                if (GLOBAL_TOKEN_TYPE === 'COGNITO_JWT') 
+                    headers['Authorization'] = GLOBAL_AUTH_TOKEN;
+                else if (GLOBAL_TOKEN_TYPE === 'API_KEY')
+                    headers['x-api-key'] = GLOBAL_AUTH_TOKEN;
             }
 
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(React.createElement(AuthTokenForm));
-        </script>
-    </body>
+            if (options.headers) {
+                try {
+                    const userHeaders = typeof options.headers === 'string' 
+                        ? JSON.parse(options.headers)
+                        : options.headers;
+                    headers = { ...headers, ...userHeaders };
+                } catch (e) {
+                    console.error('Error parsing headers:', e);
+                }
+            }
+
+            try {
+                const response = await fetch('{{graphql_endpoint}}', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(graphQLParams),
+                });
+
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ' + response.status);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('GraphQL request error:', error);
+                throw error;
+            }
+        };
+
+        const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
+
+        function initializeGraphiQL() {
+            const defaultHeaders = GLOBAL_AUTH_TOKEN ? 
+                JSON.stringify({ 'Authorization': GLOBAL_AUTH_TOKEN }, null, 2) : 
+                '{}';
+
+            ReactDOM.render(
+                React.createElement(GraphiQL, {
+                    fetcher: graphQLFetcher,
+                    defaultEditorToolsVisibility: true,
+                    plugins: [explorerPlugin],
+                    defaultHeaders: defaultHeaders,
+                    shouldPersistHeaders: false
+                }),
+                document.getElementById('graphiql')
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(AuthTokenForm));
+    </script>
     '''
 
     def run(self):
