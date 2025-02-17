@@ -25,7 +25,7 @@ class SphinxGraphiQL(Directive):
     <script crossorigin src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-    <style>
+    <!-- <style>
         /* Reset styles for GraphiQL container */
         .graphiql-container {
             height: 600px !important;
@@ -124,11 +124,11 @@ class SphinxGraphiQL(Directive):
             flex: 1 1 auto !important;
             width: 100% !important;
         }
-    </style>
+    </style> -->
     
     <div class="sphinx-graphiql-wrapper">
         <div id="root"></div>
-        <div id="graphiql" class="hidden"></div>
+        <div id="graphiql" class="hidden" style="height: 100vh;"></div>
     </div>
 
     <script type="text/babel">
