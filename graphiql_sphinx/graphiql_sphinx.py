@@ -32,13 +32,15 @@ class SphinxGraphiQL(Directive):
         }
         
         /* Reset styles for form container */
-        .container {
+        .container1 {
             width: 100% !important;
             max-width: none !important;
             padding: 0px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            # box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            # margin-bottom: 20px;
+            # margin-left:56px;
+            # margin-right:56px;
         }
         
         /* Override any max-width constraints from the theme */
@@ -47,7 +49,7 @@ class SphinxGraphiQL(Directive):
         }
         
         /* Add specific fixes for the SphinxAwesome theme */
-        .sphinx-container .main-content .body .section > .container,
+        .sphinx-container .main-content .body .section > .container1,
         .sphinx-container .main-content .body .section > #root,
         .sphinx-container .main-content .body .section > #graphiql {
             max-width: none !important;
@@ -214,7 +216,7 @@ class SphinxGraphiQL(Directive):
             };
 
             return (
-                React.createElement('div', { className: 'container' },
+                React.createElement('div', { className: 'container1' },
                     React.createElement('h2', null, 'Get Authorization Token'),
                     !response ? (
                         React.createElement('form', { onSubmit: handleSubmit },
