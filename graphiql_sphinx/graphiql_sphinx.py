@@ -276,10 +276,9 @@ class SphinxGraphiQL(Directive):
             };
 
             if (GLOBAL_AUTH_TOKEN) {
-                if (GLOBAL_TOKEN_TYPE === 'COGNITO_JWT') 
-                    headers['Authorization'] = GLOBAL_AUTH_TOKEN;
-                else if (GLOBAL_TOKEN_TYPE === 'API_KEY')
-                    headers['x-api-key'] = GLOBAL_AUTH_TOKEN;
+                // Use the header based on token type
+                const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
+                headers[headerKey] = GLOBAL_AUTH_TOKEN;
             }
 
             if (options.headers) {
@@ -314,8 +313,9 @@ class SphinxGraphiQL(Directive):
         const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
 
         function initializeGraphiQL() {
+            const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
             const defaultHeaders = GLOBAL_AUTH_TOKEN ? 
-                JSON.stringify({ 'Authorization': GLOBAL_AUTH_TOKEN }, null, 2) : 
+                JSON.stringify({ [headerKey]: GLOBAL_AUTH_TOKEN }, null, 2) : 
                 '{}';
 
             ReactDOM.render(
