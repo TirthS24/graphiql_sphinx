@@ -134,6 +134,7 @@ class SphinxGraphiQL(Directive):
     <script type="text/babel">
         // Global variables to store authentication details
         let GLOBAL_AUTH_TOKEN = null;
+        let GLOBAL_API_KEY = null;
         let GLOBAL_TOKEN_TYPE = null;
 
         const AuthTokenForm = () => {
@@ -151,7 +152,6 @@ class SphinxGraphiQL(Directive):
                     setIsGraphiQLInitialized(true);
                 } else if (!response) {
                     graphiqlElement.classList.add('hidden');
-                    // Clean up GraphiQL when logging out
                     if (isGraphiQLInitialized) {
                         ReactDOM.unmountComponentAtNode(document.getElementById('graphiql'));
                         setIsGraphiQLInitialized(false);
@@ -193,17 +193,26 @@ class SphinxGraphiQL(Directive):
 
                     GLOBAL_AUTH_TOKEN = data.authorization_header;
                     GLOBAL_TOKEN_TYPE = data.token_type;
+                    
+                    // Handle API key from additional_headers if present
+                    if (data.additional_headers && data.additional_headers['x-api-key']) {
+                        GLOBAL_API_KEY = data.additional_headers['x-api-key'];
+                    } else {
+                        GLOBAL_API_KEY = null;
+                    }
 
                     setResponse(data);
                 } catch (err) {
                     setError(err.message);
                     GLOBAL_AUTH_TOKEN = null;
+                    GLOBAL_API_KEY = null;
                     GLOBAL_TOKEN_TYPE = null;
                 }
             };
 
             const handleLogout = () => {
                 GLOBAL_AUTH_TOKEN = null;
+                GLOBAL_API_KEY = null;
                 GLOBAL_TOKEN_TYPE = null;
                 setResponse(null);
                 setFormData({});
@@ -212,7 +221,8 @@ class SphinxGraphiQL(Directive):
 
             const authFields = {
                 COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
-                API_KEY: ['api_key']
+                API_KEY: ['api_key'],
+                BOTH: ['username', 'password', 'client_id', 'pool_id', 'region', 'api_key']
             };
 
             return (
@@ -275,7 +285,13 @@ class SphinxGraphiQL(Directive):
                 'Content-Type': 'application/json',
             };
 
-            if (GLOBAL_AUTH_TOKEN) {
+            if (GLOBAL_TOKEN_TYPE === 'BOTH') {
+                // Add both Authorization and x-api-key headers
+                headers['Authorization'] = GLOBAL_AUTH_TOKEN;
+                if (GLOBAL_API_KEY) {
+                    headers['x-api-key'] = GLOBAL_API_KEY;
+                }
+            } else if (GLOBAL_AUTH_TOKEN) {
                 // Use the header based on token type
                 const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
                 headers[headerKey] = GLOBAL_AUTH_TOKEN;
@@ -313,17 +329,26 @@ class SphinxGraphiQL(Directive):
         const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
 
         function initializeGraphiQL() {
-            const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
-            const defaultHeaders = GLOBAL_AUTH_TOKEN ? 
-                JSON.stringify({ [headerKey]: GLOBAL_AUTH_TOKEN }, null, 2) : 
-                '{}';
+            let defaultHeaders = {};
+            
+            if (GLOBAL_TOKEN_TYPE === 'BOTH') {
+                defaultHeaders = {
+                    'Authorization': GLOBAL_AUTH_TOKEN
+                };
+                if (GLOBAL_API_KEY) {
+                    defaultHeaders['x-api-key'] = GLOBAL_API_KEY;
+                }
+            } else if (GLOBAL_AUTH_TOKEN) {
+                const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
+                defaultHeaders[headerKey] = GLOBAL_AUTH_TOKEN;
+            }
 
             ReactDOM.render(
                 React.createElement(GraphiQL, {
                     fetcher: graphQLFetcher,
                     defaultEditorToolsVisibility: true,
                     plugins: [explorerPlugin],
-                    defaultHeaders: defaultHeaders,
+                    defaultHeaders: JSON.stringify(defaultHeaders, null, 2),
                     shouldPersistHeaders: false
                 }),
                 document.getElementById('graphiql')
