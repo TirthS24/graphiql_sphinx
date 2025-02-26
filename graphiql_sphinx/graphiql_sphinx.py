@@ -220,9 +220,9 @@ class SphinxGraphiQL(Directive):
             };
 
             const authFields = {
-                COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
+                COGNITO: ['username', 'password', 'client_id', 'user_pool_id', 'region'],
                 API_KEY: ['api_key'],
-                BOTH: ['username', 'password', 'client_id', 'pool_id', 'region', 'api_key']
+                BOTH: ['username', 'password', 'client_id', 'user_pool_id', 'region', 'api_key']
             };
 
             return (
