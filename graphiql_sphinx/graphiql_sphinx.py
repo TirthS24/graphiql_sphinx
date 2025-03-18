@@ -74,19 +74,6 @@ class SphinxGraphiQL(Directive):
             box-sizing: border-box;
             color: #000;
         }
-        button {
-            background-color: #2980b9;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #3498db;
-        }
         .error {
             color: #c62828;
             padding: 10px;
@@ -260,7 +247,7 @@ class SphinxGraphiQL(Directive):
                                     })
                                 )
                             ),
-                            React.createElement('button', { type: 'submit' }, 'Login')
+                            React.createElement('button', { type: 'submit', id: 'token-btn' }, 'Login')
                         )
                     ) : (
                         React.createElement('div', null,
