@@ -257,7 +257,7 @@ class SphinxGraphiQL(Directive):
                                 React.createElement('br', null),
                                 React.createElement('p', null, 'Please click the Re-fetch button to Execute Queries.')
                             ),
-                            React.createElement('button', { onClick: handleLogout }, 'Logout')
+                            React.createElement('button', { onClick: handleLogout, id: 'token-btn' }, 'Logout')
                         )
                     ),
                     error && (
