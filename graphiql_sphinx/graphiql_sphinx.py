@@ -1,4 +1,4 @@
-import fett
+import fettMore actions
 from docutils import statemachine
 from docutils.utils.error_reporting import ErrorString
 from docutils.parsers.rst import Directive
@@ -21,36 +21,35 @@ class SphinxGraphiQL(Directive):
     <!-- JavaScript Dependencies -->
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/4.0.4/graphiql.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/2.4.7/graphiql.min.js"></script>
     <script crossorigin src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-    <style>
+    <!-- <style>
         /* Reset styles for GraphiQL container */
         .graphiql-container {
-            width: 100% !important;
-            max-width: 100% !important;
             height: 600px !important;
         }
         
         /* Reset styles for form container */
-        .container {
+        .container1 {
             width: 100% !important;
             max-width: none !important;
-            padding: 20px;
+            padding: 0px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            # box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            # margin-bottom: 20px;
+            # margin-left:56px;
+            # margin-right:56px;
         }
         
         /* Override any max-width constraints from the theme */
         #root, #graphiql {
             max-width: none !important;
-            width: 100% !important;
         }
         
         /* Add specific fixes for the SphinxAwesome theme */
-        .sphinx-container .main-content .body .section > .container,
+        .sphinx-container .main-content .body .section > .container1,
         .sphinx-container .main-content .body .section > #root,
         .sphinx-container .main-content .body .section > #graphiql {
             max-width: none !important;
@@ -75,19 +74,6 @@ class SphinxGraphiQL(Directive):
             box-sizing: border-box;
             color: #000;
         }
-        button {
-            background-color: #2980b9;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #3498db;
-        }
         .error {
             color: #c62828;
             padding: 10px;
@@ -106,7 +92,7 @@ class SphinxGraphiQL(Directive):
         /* Ensure GraphiQL is visible at full width */
         #graphiql {
             position: relative;
-            width: 100% !important;
+            width: 75vw !important;
             height: 600px !important;
             margin-top: 20px;
             overflow: hidden;
@@ -125,17 +111,17 @@ class SphinxGraphiQL(Directive):
             flex: 1 1 auto !important;
             width: 100% !important;
         }
-    </style>
+    </style> -->
     
     <div class="sphinx-graphiql-wrapper">
-        <h1>GraphQL API Explorer</h1>
         <div id="root"></div>
-        <div id="graphiql" class="hidden"></div>
+        <div id="graphiql" class="hidden" style="height: 100vh;"></div>
     </div>
 
     <script type="text/babel">
         // Global variables to store authentication details
         let GLOBAL_AUTH_TOKEN = null;
+        let GLOBAL_API_KEY = null;
         let GLOBAL_TOKEN_TYPE = null;
 
         const AuthTokenForm = () => {
@@ -153,7 +139,6 @@ class SphinxGraphiQL(Directive):
                     setIsGraphiQLInitialized(true);
                 } else if (!response) {
                     graphiqlElement.classList.add('hidden');
-                    // Clean up GraphiQL when logging out
                     if (isGraphiQLInitialized) {
                         ReactDOM.unmountComponentAtNode(document.getElementById('graphiql'));
                         setIsGraphiQLInitialized(false);
@@ -195,17 +180,26 @@ class SphinxGraphiQL(Directive):
 
                     GLOBAL_AUTH_TOKEN = data.authorization_header;
                     GLOBAL_TOKEN_TYPE = data.token_type;
+                    
+                    // Handle API key from additional_headers if present
+                    if (data.additional_headers && data.additional_headers['x-api-key']) {
+                        GLOBAL_API_KEY = data.additional_headers['x-api-key'];
+                    } else {
+                        GLOBAL_API_KEY = null;
+                    }
 
                     setResponse(data);
                 } catch (err) {
                     setError(err.message);
                     GLOBAL_AUTH_TOKEN = null;
+                    GLOBAL_API_KEY = null;
                     GLOBAL_TOKEN_TYPE = null;
                 }
             };
 
             const handleLogout = () => {
                 GLOBAL_AUTH_TOKEN = null;
+                GLOBAL_API_KEY = null;
                 GLOBAL_TOKEN_TYPE = null;
                 setResponse(null);
                 setFormData({});
@@ -213,12 +207,13 @@ class SphinxGraphiQL(Directive):
             };
 
             const authFields = {
-                COGNITO: ['username', 'password', 'client_id', 'pool_id', 'region'],
-                API_KEY: ['api_key']
+                COGNITO: ['username', 'password', 'client_id', 'user_pool_id', 'region'],
+                API_KEY: ['api_key'],
+                BOTH: ['username', 'password', 'client_id', 'user_pool_id', 'region', 'api_key']
             };
 
             return (
-                React.createElement('div', { className: 'container' },
+                React.createElement('div', { className: 'container1' },
                     React.createElement('h2', null, 'Get Authorization Token'),
                     !response ? (
                         React.createElement('form', { onSubmit: handleSubmit },
@@ -252,7 +247,7 @@ class SphinxGraphiQL(Directive):
                                     })
                                 )
                             ),
-                            React.createElement('button', { type: 'submit' }, 'Login')
+                            React.createElement('button', { type: 'submit', id: 'token-btn' }, 'Login')
                         )
                     ) : (
                         React.createElement('div', null,
@@ -262,7 +257,7 @@ class SphinxGraphiQL(Directive):
                                 React.createElement('br', null),
                                 React.createElement('p', null, 'Please click the Re-fetch button to Execute Queries.')
                             ),
-                            React.createElement('button', { onClick: handleLogout }, 'Logout')
+                            React.createElement('button', { onClick: handleLogout, id: 'token-btn' }, 'Logout')
                         )
                     ),
                     error && (
@@ -277,11 +272,16 @@ class SphinxGraphiQL(Directive):
                 'Content-Type': 'application/json',
             };
 
-            if (GLOBAL_AUTH_TOKEN) {
-                if (GLOBAL_TOKEN_TYPE === 'COGNITO_JWT') 
-                    headers['Authorization'] = GLOBAL_AUTH_TOKEN;
-                else if (GLOBAL_TOKEN_TYPE === 'API_KEY')
-                    headers['x-api-key'] = GLOBAL_AUTH_TOKEN;
+            if (GLOBAL_TOKEN_TYPE === 'BOTH') {
+                // Add both Authorization and x-api-key headers
+                headers['Authorization'] = GLOBAL_AUTH_TOKEN;
+                if (GLOBAL_API_KEY) {
+                    headers['x-api-key'] = GLOBAL_API_KEY;
+                }
+            } else if (GLOBAL_AUTH_TOKEN) {
+                // Use the header based on token type
+                const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
+                headers[headerKey] = GLOBAL_AUTH_TOKEN;
             }
 
             if (options.headers) {
@@ -316,16 +316,26 @@ class SphinxGraphiQL(Directive):
         const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
 
         function initializeGraphiQL() {
-            const defaultHeaders = GLOBAL_AUTH_TOKEN ? 
-                JSON.stringify({ 'Authorization': GLOBAL_AUTH_TOKEN }, null, 2) : 
-                '{}';
+            let defaultHeaders = {};
+            
+            if (GLOBAL_TOKEN_TYPE === 'BOTH') {
+                defaultHeaders = {
+                    'Authorization': GLOBAL_AUTH_TOKEN
+                };
+                if (GLOBAL_API_KEY) {
+                    defaultHeaders['x-api-key'] = GLOBAL_API_KEY;
+                }
+            } else if (GLOBAL_AUTH_TOKEN) {
+                const headerKey = GLOBAL_TOKEN_TYPE === 'API_KEY' ? 'x-api-key' : 'Authorization';
+                defaultHeaders[headerKey] = GLOBAL_AUTH_TOKEN;
+            }
 
             ReactDOM.render(
                 React.createElement(GraphiQL, {
                     fetcher: graphQLFetcher,
                     defaultEditorToolsVisibility: true,
                     plugins: [explorerPlugin],
-                    defaultHeaders: defaultHeaders,
+                    defaultHeaders: JSON.stringify(defaultHeaders, null, 2),
                     shouldPersistHeaders: false
                 }),
                 document.getElementById('graphiql')
@@ -349,4 +359,3 @@ class SphinxGraphiQL(Directive):
         self.state_machine.insert_input(rendered_lines, '')
 
         return []
-
