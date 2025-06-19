@@ -22,7 +22,7 @@ class SphinxGraphiQL(Directive):
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/3.8.0/graphiql.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/graphiql-explorer/0.6.3/graphiqlExplorer.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/graphiql-explorer/0.9.0/graphiqlExplorer.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
     <!-- <style>
