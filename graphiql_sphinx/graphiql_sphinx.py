@@ -1,4 +1,4 @@
-import fettMore actions
+import fett
 from docutils import statemachine
 from docutils.utils.error_reporting import ErrorString
 from docutils.parsers.rst import Directive
