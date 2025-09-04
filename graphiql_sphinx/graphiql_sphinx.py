@@ -25,13 +25,36 @@ class SphinxGraphiQL(Directive):
 .. raw:: html
 
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@2.4.7/graphiql.min.css">
+    <link rel="stylesheet" href="{{static_path}}/graphiql.css?v=1">
     
     <!-- JavaScript Dependencies -->
     <script crossorigin src="https://unpkg.com/react@16.14.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@16.14.0/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://cdn.jsdelivr.net/npm/graphiql@2.4.7/graphiql.min.js"></script>
+    <script src="{{static_path}}/graphiql.min.js?v=1"></script>
     <script crossorigin src="https://unpkg.com/babel-standalone@7/babel.min.js"></script>
+    
+    <!-- Debug script to check what's loaded -->
+    <script>
+        console.log('GraphiQL loaded:', typeof GraphiQL);
+        console.log('React loaded:', typeof React);
+        console.log('ReactDOM loaded:', typeof ReactDOM);
+        
+        // Prevent any dynamic imports that might cause issues
+        window.import = function() {
+            console.warn('Dynamic import blocked to prevent CDN issues');
+            return Promise.reject(new Error('Dynamic imports disabled'));
+        };
+        
+        // Override any fetch requests to problematic URLs
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            if (typeof url === 'string' && url.includes('plugin-explorer')) {
+                console.warn('Blocked request to plugin-explorer:', url);
+                return Promise.reject(new Error('Plugin explorer requests blocked'));
+            }
+            return originalFetch.call(this, url, options);
+        };
+    </script>
 
     <!-- <style>
         /* Reset styles for GraphiQL container */
