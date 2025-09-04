@@ -14,7 +14,7 @@ setuptools.setup(
         'graphql-core'
     ],
     package_data={
-        'sphinxcontrib_graphiql': ['static/*'],
+        'graphiql_sphinx': ['static/*', 'static/graphiql/*'],
     },
     entry_points={
         'sphinx.extensions': [

@@ -1,7 +1,9 @@
 import fett
+import os
 from docutils import statemachine
 from docutils.utils.error_reporting import ErrorString
 from docutils.parsers.rst import Directive
+from sphinx.util import logging
 
 
 class SphinxGraphiQL(Directive):
@@ -11,19 +13,25 @@ class SphinxGraphiQL(Directive):
     final_argument_whitespace: bool = True
     option_spec = {"query": str, "response": str, "graphql_endpoint": str, "view_only": str, "auth_endpoint": str}
 
+    def get_static_path(self, filename):
+        """Get the static file path for GraphiQL resources"""
+        # Get the directory where this module is located
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        static_dir = os.path.join(module_dir, '..', 'static', 'graphiql')
+        full_path = os.path.join(static_dir, filename)
+        return full_path
+
     GRAPHIQL_TEMPLATE: str = '''
 .. raw:: html
 
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/graphiql/3.8.0/graphiql.min.css">
-    <link rel="stylesheet" href="https://app.unpkg.com/@graphiql/plugin-explorer@3.0.1/files/dist/style.css" />
+    <link rel="stylesheet" href="{{static_path}}/graphiql.css">
     
     <!-- JavaScript Dependencies -->
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/2.4.7/graphiql.min.js"></script>
-    <script crossorigin src="https://app.unpkg.com/@graphiql/plugin-explorer@3.0.1/files/dist/index.umd.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="{{static_path}}/graphiql.min.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@7/babel.min.js"></script>
 
     <!-- <style>
         /* Reset styles for GraphiQL container */
@@ -350,7 +358,16 @@ class SphinxGraphiQL(Directive):
     def run(self):
         raw_template = fett.Template(self.GRAPHIQL_TEMPLATE)
         try:
-            rendered_template = raw_template.render(self.options)
+            # Get the static path for GraphiQL resources
+            static_path = self.get_static_path('')
+            # Remove trailing slash if present
+            static_path = static_path.rstrip('/')
+            
+            # Add static path to template options
+            template_options = dict(self.options)
+            template_options['static_path'] = static_path
+            
+            rendered_template = raw_template.render(template_options)
         except Exception as error:
             raise self.severe('Failed to render template: {}'.format(ErrorString(error)))
 
@@ -359,3 +376,25 @@ class SphinxGraphiQL(Directive):
         self.state_machine.insert_input(rendered_lines, '')
 
         return []
+
+
+def setup(app):
+    """Sphinx extension setup function"""
+    # Add the GraphiQL directive
+    app.add_directive('graphiql', SphinxGraphiQL)
+    
+    # Add static files
+    static_dir = os.path.join(os.path.dirname(__file__), '..', 'static')
+    static_dir = os.path.abspath(static_dir)
+    
+    def add_static_path(app, config):
+        if static_dir not in config.html_static_path:
+            config.html_static_path.append(static_dir)
+    
+    app.connect('config-inited', add_static_path)
+    
+    return {
+        'version': '0.0.1',
+        'parallel_read_safe': True,
+        'parallel_write_safe': True,
+    }
