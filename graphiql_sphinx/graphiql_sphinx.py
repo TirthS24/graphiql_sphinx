@@ -25,13 +25,12 @@ class SphinxGraphiQL(Directive):
 .. raw:: html
 
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="{{static_path}}/graphiql.css?v=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@1.0.0/graphiql.min.css">
     
     <!-- JavaScript Dependencies -->
-    <script crossorigin src="https://unpkg.com/react@16.14.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@16.14.0/umd/react-dom.production.min.js"></script>
-    <script src="{{static_path}}/graphiql.min.js?v=1"></script>
-    <script crossorigin src="https://unpkg.com/babel-standalone@7/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@15.6.2/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@15.6.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/graphiql@1.0.0/graphiql.min.js"></script>
     
     <!-- Debug script to check what's loaded -->
     <script>
@@ -362,9 +361,8 @@ class SphinxGraphiQL(Directive):
             ReactDOM.render(
                 React.createElement(GraphiQL, {
                     fetcher: graphQLFetcher,
-                    defaultEditorToolsVisibility: true,
-                    defaultHeaders: JSON.stringify(defaultHeaders, null, 2),
-                    shouldPersistHeaders: false
+                    defaultQuery: '# Welcome to GraphiQL\\n# Type your GraphQL query here\\n',
+                    defaultHeaders: JSON.stringify(defaultHeaders, null, 2)
                 }),
                 document.getElementById('graphiql')
             );
