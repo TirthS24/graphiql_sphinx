@@ -25,12 +25,12 @@ class SphinxGraphiQL(Directive):
 .. raw:: html
 
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@3.8.0/graphiql.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@2.4.7/graphiql.min.css">
     
     <!-- JavaScript Dependencies -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://cdn.jsdelivr.net/npm/graphiql@3.8.0/graphiql.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16.14.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16.14.0/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/graphiql@2.4.7/graphiql.min.js"></script>
     <script crossorigin src="https://unpkg.com/babel-standalone@7/babel.min.js"></script>
 
     <!-- <style>
@@ -347,8 +347,7 @@ class SphinxGraphiQL(Directive):
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(AuthTokenForm));
+        ReactDOM.render(React.createElement(AuthTokenForm), document.getElementById('root'));
     </script>
     '''
 
