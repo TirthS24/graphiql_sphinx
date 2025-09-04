@@ -25,12 +25,12 @@ class SphinxGraphiQL(Directive):
 .. raw:: html
 
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="{{static_path}}/graphiql.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@3.8.0/graphiql.min.css">
     
     <!-- JavaScript Dependencies -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="{{static_path}}/graphiql.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/graphiql@3.8.0/graphiql.min.js"></script>
     <script crossorigin src="https://unpkg.com/babel-standalone@7/babel.min.js"></script>
 
     <!-- <style>
@@ -321,8 +321,6 @@ class SphinxGraphiQL(Directive):
             }
         };
 
-        const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
-
         function initializeGraphiQL() {
             let defaultHeaders = {};
             
@@ -342,7 +340,6 @@ class SphinxGraphiQL(Directive):
                 React.createElement(GraphiQL, {
                     fetcher: graphQLFetcher,
                     defaultEditorToolsVisibility: true,
-                    plugins: [explorerPlugin],
                     defaultHeaders: JSON.stringify(defaultHeaders, null, 2),
                     shouldPersistHeaders: false
                 }),
